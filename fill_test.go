@@ -21,8 +21,16 @@ func TestFill(t *testing.T) {
 		t.Error(err)
 	}
 
-	if err = Fill(&c, "a string"); err != nil {
-		t.Error(err)
+	if err = Fill(&c, "a string"); err == nil {
+		t.Error("fill should not convert types")
+	}
+
+	if err = Fill(b, "a string"); err == nil {
+		t.Error("fill should not operate on non pointers")
+	}
+
+	if err = Fill(&b, 5); err == nil {
+		t.Error("fill should not set on non-assignable types")
 	}
 
 }
@@ -43,4 +51,20 @@ func ExampleFill() {
 	// Output:
 	// {5 hello}
 	// {20 hello}
+}
+
+func ExampleConvertFill() {
+	type S string
+	var s S
+
+	fmt.Println(Fill(&s, "hello") == nil)
+	fmt.Println(s)
+	fmt.Println(ConvertFill(&s, "hello") == nil)
+	fmt.Println(s)
+
+	// Output:
+	// false
+	//
+	// true
+	// hello
 }

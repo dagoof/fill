@@ -5,7 +5,13 @@ import (
 	"reflect"
 )
 
-func Fill(dst, src interface{}) error {
+type option uint64
+
+const (
+	convert option = 1 << iota
+)
+
+func fill(options option, dst, src interface{}) error {
 	d := reflect.ValueOf(dst)
 	s := reflect.ValueOf(src)
 
@@ -22,12 +28,13 @@ func Fill(dst, src interface{}) error {
 	st := s.Type()
 	dt := d.Type()
 
-	if !st.ConvertibleTo(dt) {
-		return errors.New("src type not convertible to dst type")
+	if options&convert > 0 {
+		if !st.ConvertibleTo(dt) {
+			return errors.New("src type not convertible to dst type")
+		}
+		s = s.Convert(dt)
+		st = s.Type()
 	}
-
-	s = s.Convert(dt)
-	st = s.Type()
 
 	if !st.AssignableTo(dt) {
 		return errors.New("src type not assignable to dst type")
@@ -35,4 +42,12 @@ func Fill(dst, src interface{}) error {
 
 	d.Set(s)
 	return nil
+}
+
+func Fill(dst, src interface{}) error {
+	return fill(0, dst, src)
+}
+
+func ConvertFill(dst, src interface{}) error {
+	return fill(convert, dst, src)
 }
